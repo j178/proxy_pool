@@ -1,12 +1,14 @@
 package cache
 
 import (
-	"github.com/phpgao/proxy_pool/db"
-	"github.com/phpgao/proxy_pool/model"
-	"github.com/phpgao/proxy_pool/util"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/phpgao/proxy_pool/db"
+	"github.com/phpgao/proxy_pool/model"
+	"github.com/phpgao/proxy_pool/util"
 )
 
 type Cached struct {
@@ -50,11 +52,11 @@ func getProxyMap() map[string][]model.HttpProxy {
 
 		if k == "http" {
 			p, err = engine.Get(map[string]string{
-				"score": string(util.ServerConf.ScoreAtLeast),
+				"score": strconv.Itoa(util.ServerConf.ScoreAtLeast),
 			})
 		} else {
 			p, err = engine.Get(map[string]string{
-				"score":  string(util.ServerConf.ScoreAtLeast),
+				"score":  strconv.Itoa(util.ServerConf.ScoreAtLeast),
 				"schema": k,
 			})
 		}
