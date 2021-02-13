@@ -3,16 +3,17 @@ package server
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/apex/log"
-	"github.com/phpgao/proxy_pool/cache"
-	"github.com/phpgao/proxy_pool/model"
-	"github.com/phpgao/proxy_pool/util"
 	"io"
 	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/apex/log"
+	"github.com/phpgao/proxy_pool/cache"
+	"github.com/phpgao/proxy_pool/model"
+	"github.com/phpgao/proxy_pool/util"
 )
 
 var (
@@ -27,7 +28,7 @@ func handleTunneling(w http.ResponseWriter, r *http.Request) {
 	var destConn net.Conn
 
 	if proxies == nil {
-		logger.Debug("serve as a https proxy")
+		logger.Info("serve as a https proxy")
 		destConn, err = net.DialTimeout("tcp", r.Host, timeOut)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -38,7 +39,7 @@ func handleTunneling(w http.ResponseWriter, r *http.Request) {
 	} else {
 		l := len(proxies)
 		proxy := proxies[rand.Intn(l)]
-		logger.WithField("proxy", proxy.GetProxyWithSchema()).Debug("dynamic https")
+		logger.WithField("proxy", proxy.GetProxyWithSchema()).Info("dynamic https")
 		msg := fmt.Sprintf(model.ConnectCommand, http.MethodConnect, r.Host, "HTTP/1.1", r.Host)
 
 		destConn, err = net.DialTimeout("tcp", proxy.GetProxyUrl(), timeOut)
@@ -158,7 +159,7 @@ func logging(hdlr http.Handler) http.Handler {
 				"Path":       req.URL.Path,
 				"RemoteAddr": req.RemoteAddr,
 				"UserAgent":  req.UserAgent(),
-				"time":       time.Since(start),
+				"Duration":   time.Since(start),
 			}).Info("")
 		}(time.Now())
 		hdlr.ServeHTTP(w, req)

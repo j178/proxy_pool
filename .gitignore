@@ -93,3 +93,4 @@ config.json
 /proxy_pool_linux_arm
 /proxy_pool_linux_386
 /proxy_pool_linux_mips
+out
