@@ -7,14 +7,14 @@ import (
 
 var (
 	config       = util.ServerConf
-	NewProxyChan = make(chan *model.HttpProxy, config.NewQueue)
-	OldProxyChan = make(chan *model.HttpProxy, config.OldQueue)
+	newProxyChan = make(chan *model.HttpProxy, config.NewQueue)
+	oldProxyChan = make(chan *model.HttpProxy, config.OldQueue)
 )
 
 func GetNewChan() chan *model.HttpProxy {
-	return NewProxyChan
+	return newProxyChan
 }
 
 func GetOldChan() chan *model.HttpProxy {
-	return OldProxyChan
+	return oldProxyChan
 }
