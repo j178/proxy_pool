@@ -11,7 +11,6 @@ import (
     "github.com/go-redis/redis/v7"
 
     "github.com/phpgao/proxy_pool/model"
-    "github.com/phpgao/proxy_pool/util"
 )
 
 type redisDB struct {
@@ -194,7 +193,7 @@ func (r *redisDB) Get(options map[string]string) (proxies []model.HttpProxy, err
     }
 
     if limit == 0 {
-        limit = util.ServerConf.Limit
+        limit = config.Limit
     }
 
     if err != nil {
