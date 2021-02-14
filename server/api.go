@@ -24,13 +24,13 @@ type Resp struct {
 	Code   int         `json:"code"`
 	Error  string      `json:"error"`
 	Total  int         `json:"total"`
-	Schema interface{} `json:",omitempty"`
-	Score  interface{} `json:",omitempty"`
-	Cn     int         `json:",omitempty"`
+	Schema interface{} `json:"schema,omitempty"`
+	Score  interface{} `json:"score,omitempty"`
+	Cn     int         `json:"cn,omitempty"`
 	Data   interface{} `json:"data"`
-	Get    string      `json:",omitempty"`
-	Random string      `json:",omitempty"`
-	Home   string      `json:",omitempty"`
+	Get    string      `json:"get,omitempty"`
+	Random string      `json:"random,omitempty"`
+	Home   string      `json:"home,omitempty"`
 }
 
 //
