@@ -19,8 +19,8 @@ type Config struct {
     PrefixKey     string `default:"proxy_pool"`    //redis 默认前缀
     DataStore     string `default:"bolt"`          // 数据保存方式，bolt or redis
     DataDir       string `default:"."`             // Db 文件目录
-    NewQueue      int    `default:"20"`            //验证新代理队列
-    OldQueue      int    `default:"30"`            //验证旧代理队列
+    NewQueue      int    `default:"200"`            //验证新代理队列
+    OldQueue      int    `default:"300"`            //验证旧代理队列
     Debug         bool   `default:"false"`         //调试模式
     DumpHttp      bool   `default:"false"`         //调试http
     CheckInterval int    `default:"60"`            //检查代理间隔
@@ -38,8 +38,8 @@ type Config struct {
     ProxyBind           string `default:"0.0.0.0"` //动态代理的IP
     ProxyPort           int    `default:"8089"`    //动态代理的端口
     OnlyChina           bool   `default:"true"`    //只处理中国的IP
-    UlimitCur           int    `default:"65535"`   //ulimit
-    UlimitMax           int    `default:"65535"`   //ulimit
+    UlimitCur           int    `default:"10240"`   //ulimit
+    UlimitMax           int    `default:"10240"`   //ulimit
     ScoreAtLeast        int    `default:"60"`      //随机选择的最小分数
     MaxProxy            int    `default:"2000"`    //最大代理个数
     MaxRetry            int    `default:"3"`       //最大重试次数
