@@ -32,9 +32,9 @@ func GetDb() Store {
 	if db == nil {
 		db = &redisDB{
 			client: redis.NewClient(&redis.Options{
-				Addr:     fmt.Sprintf("%s:%d", config.Host, config.Port),
-				Password: config.Auth, // no password set
-				DB:       config.Db,   // use default DB
+                    Addr:     fmt.Sprintf("%s:%d", config.RedisHost, config.RedisPort),
+                    Password: config.RedisAuth, // no password set
+                    DB:       config.RedisDb,   // use default DB
 			}),
 			PrefixKey: config.PrefixKey,
 			KeyExpire: config.Expire,
