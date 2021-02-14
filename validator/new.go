@@ -37,6 +37,7 @@ func NewValidator() {
 					}()
 
 					if storeEngine.Exists(*proxy) {
+						logger.WithField("proxy", proxy.GetProxyUrl()).Infof("proxy existed, ignore it")
 						return
 					}
 
@@ -59,7 +60,7 @@ func NewValidator() {
 								"proxy", p.GetProxyUrl()).Debug("error test https proxy")
 						}
 					}
-					logger.WithField("proxy", p.GetProxyUrl()).Debug("add new proxy")
+					logger.WithField("proxy", p.GetProxyUrl()).Info("add new proxy")
 					storeEngine.Add(*p)
 				}(proxy)
 			}
