@@ -50,7 +50,7 @@ type Config struct {
 func init() {
 	var m *multiconfig.DefaultLoader
 	for _, file := range []string{"config.yml", "config.yaml", "config.json", "config.toml"} {
-		if fileExists(file) {
+        if FileExists(file) {
 			m = multiconfig.NewWithPath(file)
 			fmt.Printf("Loaded file --> %s\n", file)
 			break
@@ -64,13 +64,6 @@ func init() {
 	ServerConf = serverConf
 }
 
-func fileExists(filename string) bool {
-	info, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
-}
 
 func (c Config) GetInternalCron() string {
 	return fmt.Sprintf("@every %ds", c.CheckInterval)
