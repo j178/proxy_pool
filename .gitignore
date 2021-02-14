@@ -84,3 +84,4 @@ $RECYCLE.BIN/
 proxy_pool
 config.json
 out
+proxies.db
