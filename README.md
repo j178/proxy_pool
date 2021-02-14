@@ -13,10 +13,6 @@ A simple proxy pool written in go
  - 使用命令行环境变量进行配置
  - 当没有IP可用时使用本地转发
 
-## 依赖
-
- - redis
-
 ## 使用说明
 
 ### 编译
@@ -28,8 +24,8 @@ go build
 ### 下载
 
 ```bash
-# 版本 v0.3.3
-wget https://github.com/phpgao/proxy_pool/releases/download/v0.3.3/proxy_pool_linux_amd64
+VERSION=x
+wget https://github.com/j178/proxy_pool/releases/download/$VERSION/proxy_pool_linux_amd64
 chmod a+x proxy_pool_linux_amd64
 ```
 
@@ -37,16 +33,15 @@ chmod a+x proxy_pool_linux_amd64
 
 ```bash
 cp config_example.json config.json
-# 修改redis和端口配置
 
-# 感谢ipip.net提供精准的IP数据(已内置)
+# 启动
 ./proxy_pool
 
 # 打印可设定参数
 ./proxy_pool_linux_amd64 --help
 
 # 命令行指定配置
-./proxy_pool_linux_amd64 -host 8.8.8.8 -port 6379 -auth laogao
+./proxy_pool_linux_amd64 -datadir /data/proxy_pool -debug
 
 # 后台运行
 nohup ./proxy_pool_linux_amd64 > /dev/null 2>&1 &
