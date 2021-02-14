@@ -33,7 +33,7 @@ type HttpProxy struct {
 	Schema    string `json:"schema"`
 	Score     int    `json:"score"`
 	Latency   int    `json:"latency"`
-	From      string `json:"-"`
+	From      string `json:"from"`
 	Anonymous int    `json:"anonymous"`
 	Country   string `json:"country"`
 	Deadline string `json:"deadline"`
