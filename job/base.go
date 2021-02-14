@@ -230,7 +230,7 @@ func getProxy(s Crawler) {
 				tmpMap[newProxy.GetKey()] = 1
 				newProxy.From = s.Name()
 				if newProxy.Score == 0 {
-					newProxy.Score = util.ServerConf.Score
+					newProxy.Score = util.ServerConf.DefaultScore
 				}
 				if model.FilterProxy(newProxy) {
 					inputChan <- newProxy
