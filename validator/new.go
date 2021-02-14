@@ -17,7 +17,7 @@ var (
 func NewValidator() {
 	q := queue.GetNewChan()
 	var wg sync.WaitGroup
-	for i := 0; i < config.OldQueue; i++ {
+	for i := 0; i < config.NewQueue; i++ {
 		wg.Add(1)
 		go func() {
 			for {

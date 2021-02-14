@@ -17,8 +17,8 @@ type Config struct {
 	Db                  int    `default:"1"`          //redis db
 	Auth                string `default:""`           //redis 密码
 	PrefixKey           string `default:"proxy_pool"` //默认前缀
-	NewQueue            int    `default:"200"`        //验证新代理队列
-	OldQueue            int    `default:"300"`        //验证旧代理队列
+	NewQueue            int    `default:"20"`        //验证新代理队列
+	OldQueue            int    `default:"30"`        //验证旧代理队列
 	Debug               bool   `default:"false"`      //调试模式
 	DumpHttp            bool   `default:"false"`      //调试http
 	CheckInterval       int    `default:"60"`         //检查代理间隔

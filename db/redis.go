@@ -46,11 +46,7 @@ func (r *redisDB) GetProxyKey(proxy model.HttpProxy) string {
 }
 
 func (r *redisDB) Add(proxy model.HttpProxy) bool {
-	key := strings.Join([]string{
-		r.PrefixKey,
-		"list",
-		proxy.GetKey(),
-	}, ":")
+	key := r.GetProxyKey(proxy)
 	if !r.KeyExists(key) {
 		err := r.client.HMSet(key, proxy.GetProxyMap()).Err()
 		if err != nil {
@@ -75,11 +71,7 @@ func (r *redisDB) Add(proxy model.HttpProxy) bool {
 }
 
 func (r *redisDB) UpdateSchema(proxy model.HttpProxy) (err error) {
-	key := strings.Join([]string{
-		r.PrefixKey,
-		"list",
-		proxy.GetKey(),
-	}, ":")
+	key := r.GetProxyKey(proxy)
 	if !r.KeyExists(key) {
 		return errors.New("proxy not exists")
 	}

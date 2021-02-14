@@ -74,7 +74,7 @@ func NewScheduler() *Scheduler {
 	s.spiders = job.GetSpiders(queue.GetNewChan())
 
 	internalJob := Internal{
-		channel: queue.OldProxyChan,
+		channel: queue.GetOldChan(),
 		db:      db.GetDb(),
 	}
 
