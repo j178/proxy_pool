@@ -40,10 +40,9 @@ func OldValidator() {
                         if conn != nil {
                             score = 10
                             // test https
-
                             err := p.TestConnectMethod(conn)
                             if err != nil {
-                                logger.WithError(err).WithField("proxy", p.GetProxyWithSchema()).Debug("error https test")
+                                logger.WithError(err).WithField("proxy", p.GetProxyWithSchema()).Debug("error CONNECT test")
                                 if p.IsHttps() {
                                     score = -20
                                 }

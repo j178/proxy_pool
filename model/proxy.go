@@ -137,7 +137,8 @@ func (p *HttpProxy) TestProxy(https bool) (err error) {
 			),
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
-		Timeout: timeout}
+		Timeout: timeout,
+	}
 
 	var testUrl string
 	if https {

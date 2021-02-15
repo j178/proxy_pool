@@ -38,7 +38,7 @@ func Update() {
 		logger.Debug("need wash db")
 		Wash()
 	}
-	logger.Debug("done")
+	logger.Debug("wash done")
 }
 
 func CanDo() bool {

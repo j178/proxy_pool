@@ -75,7 +75,7 @@ func (s *spys) Fetch(siteUrl string, useProxy bool) (body string, err error) {
 	} else {
 		resp, body, errs = superAgent.End()
 	}
-	if err = s.errAndStatus(errs, resp); err != nil {
+	if err = s.checkErrAndStatus(errs, resp); err != nil {
 		return
 	}
 

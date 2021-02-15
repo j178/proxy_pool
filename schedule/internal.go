@@ -10,7 +10,7 @@ type Internal struct {
 	db      db.Store
 }
 
-func (i Internal) Run() {
+func (i *Internal) Run() {
 	m := i.db.GetAll()
 	proxyCount := len(m)
 	logger.WithField("Count", proxyCount).Info("start internal check")

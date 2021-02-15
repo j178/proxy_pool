@@ -23,7 +23,10 @@ var (
 
 func RunService() {
     defer func() {
-        _ = db.GetDb().Close()
+        err := db.GetDb().Close()
+        if err != nil {
+            logger.WithError(err).Error("close db error")
+        }
     }()
 
     var ApiService, ProxyService *http.Server
