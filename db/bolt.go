@@ -287,12 +287,11 @@ func (self *boltDB) Random() (model.HttpProxy, error) {
         for k, v := cursor.First(); k != nil; k, v = cursor.Next() {
             if i == keyIndex {
                 proxy, err = self.unmarshal(v)
-                if err != nil {
-                    return err
-                }
+                return err
             }
+            i += 1
         }
-        return nil
+        return noProxy
     })
     if err != nil {
         logger.WithError(err).Error("get random error")
