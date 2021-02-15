@@ -51,11 +51,13 @@ nohup ./proxy_pool_linux_amd64 > /dev/null 2>&1 &
 
 ```bash
 # 统计
-curl 127.0.0.1:8088
-# 随机
-curl 127.0.0.1:8088/random
-# 获取列表
-curl 127.0.0.1:8088/get
+curl http://127.0.0.1:8088
+# 随机返回一个代理（JSON 格式）
+curl http://127.0.0.1:8088/random
+# 随机返回一个代理（Text 格式）
+curl http://127.0.0.1/8088/random_text
+# 获取代理列表
+curl http://127.0.0.1:8088/get
 ```
 
 ### 动态代理
