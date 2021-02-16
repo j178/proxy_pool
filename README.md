@@ -136,6 +136,11 @@ curl https://cip.cc -x 127.0.0.1:8089
  - 更精细的超时控制
  - 主从模式
  - 代理认证
+ - [x] reverse 支持 forward only (其实现在已经实现了，就是 handleHTTP 做的)
+ - 修复 proxy scheme 和 proxy supports tunnel 的区别
+ - 增加探测 proxy scheme 是否为 https 的判断
+ - 支持 socks 代理和 reverse (类似本地的 clash server)
+ - old validator 增加 latency，根据 latency filter
 
 ## 反馈
 
