@@ -2,6 +2,7 @@ package validator
 
 import (
     "sync"
+    "time"
 
     "github.com/phpgao/proxy_pool/db"
     "github.com/phpgao/proxy_pool/model"
@@ -40,28 +41,33 @@ func NewValidator() {
                         return
                     }
 
-                    err = p.SimpleTcpTest(config.GetTcpTestTimeOut())
+                    err = p.TestTcp()
                     if err != nil {
-                        //logger.WithError(err).WithField("proxy", p.GetProxyUrl()).Debug("error test tcp")
+                        logger.WithError(err).WithField("proxy", p.GetProxyUrl()).Debug("test tcp error")
                         return
                     }
-                    // http test
-                    err = p.TestProxy(false)
+                    err = p.TestTls()
                     if err != nil {
-                        logger.WithError(err).WithField(
-                           "proxy", p.GetProxyUrl(),
-                        ).Debug("error test http proxy")
+                        logger.WithError(err).WithField("proxy", p.GetProxyUrl()).Debug("test tls error")
+                        p.Schema = "http"
+                    } else {
+                        p.Schema = "https"
+                    }
+                    startsAt := time.Now()
+                    err = p.TestProxy()
+                    if err != nil {
+                        logger.WithError(err).WithField("proxy", p.GetProxyUrl()).Debug("test http proxy error")
                         return
                     } else {
-                        // https test
-                        err := p.TestProxy(true)
+                        p.Latency = int(time.Since(startsAt) / time.Millisecond)
+                        err = p.TestHttpTunnel()
                         if err != nil {
-                            logger.WithError(err).WithField(
-                                "proxy", p.GetProxyUrl(),
-                            ).Debug("error test https proxy")
+                            logger.WithError(err).WithField("proxy", p.GetProxyUrl()).Debug("test http tunnel proxy error")
+                        } else {
+                            p.Tunnel = true
                         }
                     }
-                    logger.WithField("proxy", p.GetProxyUrl()).Info("add new proxy")
+                    logger.WithField("proxy", p.GetProxyUrl()).Info("added new proxy")
                     storeEngine.Add(*p)
                 }(proxy)
             }
