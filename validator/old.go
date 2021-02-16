@@ -30,42 +30,34 @@ func OldValidator() {
                     defer func() {
                         lockMap.Delete(key)
                     }()
-                    if storeEngine.Exists(p) {
-                        var score int
-                        conn, err := p.TestTcp()
-                        if err != nil {
-                            score = -30
-                        }
-                        // if tcp test success
-                        if conn != nil {
-                            score = 10
-                            // test https
-                            err := p.TestConnectMethod(conn)
-                            if err != nil {
-                                logger.WithError(err).WithField("proxy", p.GetProxyWithSchema()).Debug("error CONNECT test")
-                                if p.IsHttps() {
-                                    score = -20
-                                }
-                            } else {
-                                p.Schema = "https"
-                                // save proxy to db
-                                err = storeEngine.UpdateSchema(p)
-                                if err != nil {
-                                    logger.WithError(err).WithField("proxy", p.GetProxyWithSchema()).Info("error update schema")
-                                }
-                            }
-                        }
-                        logger.WithFields(log.Fields{
-                            "score": score,
-                            "proxy": p.GetProxyWithSchema(),
-                        }).Info("set score")
 
-                        err = storeEngine.AddScore(p, score)
+                    if !storeEngine.Exists(p) {
+                        return
+                    }
+
+                    var score int
+                    err := p.TestTcp()
+                    if err != nil {
+                        logger.WithError(err).WithField("proxy", p.GetProxyWithSchema()).Debug("test tcp error")
+                        score = -100
+                    } else {
+                        score = 10
+                        err := p.TestProxy()
                         if err != nil {
-                            logger.WithError(err).WithField(
-                                "proxy", p.GetProxyWithSchema()).Error("error setting score")
+                            logger.WithError(err).WithField("proxy", p.GetProxyWithSchema()).Debug("test http tunnel error")
+                            score = -100
                         }
                     }
+                    logger.WithFields(log.Fields{
+                        "score": score,
+                        "proxy": p.GetProxyWithSchema(),
+                    }).Info("set score")
+
+                    err = storeEngine.AddScore(p, score)
+                    if err != nil {
+                        logger.WithError(err).WithField("proxy", p.GetProxyWithSchema()).Error("set score error")
+                    }
+
                 }(*proxy)
             }
 
