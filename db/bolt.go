@@ -212,7 +212,7 @@ func (self *boltDB) Get(options map[string]string) (proxies []model.HttpProxy, e
     }
     if len(filters) > 0 {
         for _, p := range all {
-            if Match(filters, p) {
+            if Match(filters, &p) {
                 proxies = append(proxies, p)
             }
             if len(proxies) > limit {

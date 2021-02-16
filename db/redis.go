@@ -202,7 +202,7 @@ func (r *redisDB) Get(options map[string]string) (proxies []model.HttpProxy, err
 
     if len(filters) > 0 {
         for _, p := range all {
-            if Match(filters, p) {
+            if Match(filters, &p) {
                 proxies = append(proxies, p)
             }
             if len(proxies) > limit {
@@ -220,7 +220,7 @@ func (r *redisDB) Get(options map[string]string) (proxies []model.HttpProxy, err
     return
 }
 
-func Match(filters []func(model.HttpProxy) bool, p model.HttpProxy) bool {
+func Match(filters []func(*model.HttpProxy) bool, p *model.HttpProxy) bool {
     for _, fc := range filters {
         if !fc(p) {
             return false

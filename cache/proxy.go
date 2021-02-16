@@ -43,26 +43,26 @@ func init() {
 
 func getProxyMap() map[string][]model.HttpProxy {
 	m := map[string][]model.HttpProxy{
-		"http":  nil,
-		"https": nil,
+		"forward":  nil,
+		"tunnel": nil,
 	}
 	var err error
 	for k := range m {
 		var p []model.HttpProxy
 
-		if k == "http" {
+		if k == "forward" {
 			p, err = engine.Get(map[string]string{
 				"score": strconv.Itoa(util.ServerConf.ScoreAtLeast),
 			})
 		} else {
 			p, err = engine.Get(map[string]string{
 				"score":  strconv.Itoa(util.ServerConf.ScoreAtLeast),
-				"schema": k,
+				"tunnel": "true",
 			})
 		}
 
 		if err != nil {
-			logger.WithField("type", k).WithError(err).Error("error get proxy")
+			logger.WithField("type", k).WithError(err).Error("get proxy error")
 			continue
 		}
 		m[k] = p
