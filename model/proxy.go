@@ -91,7 +91,6 @@ func (p *HttpProxy) GetProxyUrl() string {
 }
 
 func (p *HttpProxy) GetProxyWithSchema() string {
-    // 默认所有的 proxy 都是 http 协议
     return fmt.Sprintf("%s://%s:%s", p.Schema, p.Ip, p.Port)
 }
 
