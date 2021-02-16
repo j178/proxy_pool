@@ -1,232 +1,198 @@
 package model
 
 import (
-	"bytes"
-	"crypto/md5"
-	"crypto/tls"
-	"encoding/hex"
-	"errors"
-	"fmt"
-	"github.com/fatih/structs"
-	"github.com/phpgao/proxy_pool/util"
-	"io"
-	"io/ioutil"
-	"net"
-	"net/http"
-	"net/url"
-	"reflect"
-	"strconv"
-	"strings"
-	"time"
+    "crypto/md5"
+    "crypto/tls"
+    "encoding/hex"
+    "errors"
+    "fmt"
+    "io"
+    "io/ioutil"
+    "net"
+    "net/http"
+    "net/url"
+    "reflect"
+    "strconv"
+    "strings"
+    "time"
+
+    "github.com/fatih/structs"
+
+    "github.com/phpgao/proxy_pool/util"
 )
 
 var (
-	config = util.ServerConf
-	logger = util.GetLogger("model")
+    config         = util.ServerConf
+    tcpTestTimeout = config.GetTcpTestTimeOut()
+    logger         = util.GetLogger("model")
+    proxyNotWork   = errors.New("proxy not work")
 )
 
-const ConnectCommand = "%s %s %s\r\nHost: %s\r\nProxy-Connection: Keep-Alive\r\n\r\n"
+const (
+    ConnectCommand = "%s %s %s\r\nHost: %s\r\nProxy-Connection: Keep-Alive\r\n\r\n"
+    testUrl        = "http://ip.cip.cc"
+    testHttpsUrl   = "https://ip.cip.cc"
+)
 
 type HttpProxy struct {
-	Ip        string `json:"ip"`
-	Port      string `json:"port"`
-	Schema    string `json:"schema"`
-	Score     int    `json:"score"`
-	Latency   int    `json:"latency"`
-	From      string `json:"from"`
-	Anonymous int    `json:"anonymous"`
-	Country   string `json:"country"`
-	Deadline string `json:"deadline"`
+    Ip        string `json:"ip"`
+    Port      string `json:"port"`
+    Schema    string `json:"schema"`
+    Tunnel    bool   `json:"tunnel"`
+    Score     int    `json:"score"`
+    Latency   int    `json:"latency"`
+    From      string `json:"from"`
+    Anonymous int    `json:"anonymous"`
+    Country   string `json:"country"`
+    Deadline  string `json:"deadline"`
 }
 
 func Make(m map[string]string) (newProxy HttpProxy, err error) {
-	rVal := reflect.ValueOf(&newProxy).Elem()
-	rType := reflect.TypeOf(newProxy)
-	fieldCount := rType.NumField()
+    rVal := reflect.ValueOf(&newProxy).Elem()
+    rType := reflect.TypeOf(newProxy)
+    fieldCount := rType.NumField()
 
-	for i := 0; i < fieldCount; i++ {
-		t := rType.Field(i)
-		f := rVal.Field(i)
-		if v, ok := m[t.Name]; ok {
-			ddd := reflect.TypeOf(v)
-			if ddd != t.Type {
-				v, _ := strconv.Atoi(v)
-				f.Set(reflect.ValueOf(v))
-			} else {
-				f.Set(reflect.ValueOf(v))
-			}
-		} else {
-			return newProxy, errors.New(t.Name + " not found")
-		}
-	}
+    for i := 0; i < fieldCount; i++ {
+        t := rType.Field(i)
+        f := rVal.Field(i)
+        if v, ok := m[t.Name]; ok {
+            ddd := reflect.TypeOf(v)
+            if ddd != t.Type {
+                v, _ := strconv.Atoi(v)
+                f.Set(reflect.ValueOf(v))
+            } else {
+                f.Set(reflect.ValueOf(v))
+            }
+        } else {
+            return newProxy, errors.New(t.Name + " not found")
+        }
+    }
 
-	defer func() {
-		if r := recover(); r != nil {
-			logger.WithField("fatal", r).Warn("Recovered")
-		}
-	}()
+    defer func() {
+        if r := recover(); r != nil {
+            logger.WithField("fatal", r).Warn("Recovered")
+        }
+    }()
 
-	return
+    return
 }
 
 func (p *HttpProxy) GetKey() string {
-	hash := md5.New()
-	_, err := io.WriteString(hash, p.GetProxyUrl())
-	if err != nil {
-		return ""
-	}
-	return hex.EncodeToString(hash.Sum(nil))
+    hash := md5.New()
+    _, err := io.WriteString(hash, p.GetProxyUrl())
+    if err != nil {
+        return ""
+    }
+    return hex.EncodeToString(hash.Sum(nil))
 }
 
 func (p *HttpProxy) GetProxyUrl() string {
-	return fmt.Sprintf("%s:%s", p.Ip, p.Port)
+    return fmt.Sprintf("%s:%s", p.Ip, p.Port)
 }
 
 func (p *HttpProxy) GetProxyWithSchema() string {
-	return fmt.Sprintf("%s://%s:%s", p.Schema, p.Ip, p.Port)
+    // 默认所有的 proxy 都是 http 协议
+    return fmt.Sprintf("%s://%s:%s", p.Schema, p.Ip, p.Port)
+}
+
+func (p *HttpProxy) GetFullUrl() *url.URL {
+    _url := p.GetProxyWithSchema()
+    u, err := url.Parse(_url)
+    if err != nil {
+        panic("invalid proxy url" + _url)
+    }
+    return u
 }
 
 func (p *HttpProxy) GetProxyMap() map[string]interface{} {
-	return structs.Map(p)
+    return structs.Map(p)
 }
 
 func (p *HttpProxy) GetIp() string {
-	return p.Ip
+    return p.Ip
 }
 
 func (p *HttpProxy) GetPort() string {
-	return p.Port
+    return p.Port
 }
 func (p *HttpProxy) IsHttps() bool {
-	return p.Schema == "https"
+    return p.Schema == "https"
 }
 
-func (p *HttpProxy) SimpleTcpTest(timeOut time.Duration) (err error) {
-	var conn net.Conn
-	conn, err = net.DialTimeout("tcp", fmt.Sprintf("%s:%s", p.Ip, p.Port), timeOut)
-	if err != nil {
-		return
-	}
-	defer func() {
-		if conn != nil {
-			_ = conn.Close()
-		}
-	}()
-	return
-}
-
-func (p *HttpProxy) GetHttpTransport() (t *http.Transport, err error) {
-	proxyUrl := &url.URL{Host: p.GetProxyUrl(), Scheme: "http"}
-
-	t = &http.Transport{
-		Proxy: http.ProxyURL(proxyUrl),
-	}
-
-	return
-}
-
-func (p *HttpProxy) TestProxy(https bool) (err error) {
-
-	startAt := time.Now()
-	timeout := 6 * time.Second
-
-	client := &http.Client{
-		Transport: &http.Transport{
-			Proxy: http.ProxyURL(&url.URL{
-				Host: fmt.Sprintf("%s:%s", p.Ip, p.Port)},
-			),
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-		Timeout: timeout,
-	}
-
-	var testUrl string
-	if https {
-		testUrl = "https://ip.cip.cc"
-	} else {
-		testUrl = "http://ip.cip.cc"
-	}
-
-	resp, err := client.Get(testUrl)
-	if err != nil {
-		return
-	}
-	defer func() {
-		err := resp.Body.Close()
-		if err != nil {
-			return
-		}
-	}()
-
-	if 200 != resp.StatusCode {
-		return fmt.Errorf("http code %d", resp.StatusCode)
-	}
-
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return
-	}
-	html := strings.TrimSpace(string(b))
-	if html != p.GetIp() {
-		return errors.New("html doesn't match")
-	}
-	latency := time.Now().UnixNano() - startAt.UnixNano()
-	p.Latency = int(latency / 1000 / 1000)
-	if https {
-		p.Schema = "https"
-	} else {
-		p.Schema = "http"
-	}
-	return
+func (p *HttpProxy) GetHttpTransport() *http.Transport {
+    t := &http.Transport{
+        Proxy:           http.ProxyURL(p.GetFullUrl()),
+        TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+    }
+    return t
 }
 
 // test tcp
-func (p *HttpProxy) TestTcp() (conn net.Conn, err error) {
-	conn, err = net.DialTimeout("tcp", fmt.Sprintf("%s:%s", p.Ip, p.Port), config.GetTcpTestTimeOut())
-	if err != nil {
-		if conn != nil {
-			_ = conn.Close()
-		}
-		return
-	}
+func (p *HttpProxy) TestTcp() error {
+    conn, err := net.DialTimeout("tcp", p.GetProxyUrl(), tcpTestTimeout)
+    if conn != nil {
+        _ = conn.Close()
+    }
+    return err
+}
 
-	return
+func (p *HttpProxy) TestTls() error {
+    conf := &tls.Config{
+        InsecureSkipVerify: true,
+    }
+    dialer := &net.Dialer{
+        Timeout: tcpTestTimeout,
+    }
+    conn, err := tls.DialWithDialer(dialer, "tcp", p.GetProxyUrl(), conf)
+    if conn != nil {
+        _ = conn.Close()
+    }
+    return err
+}
+
+func (p *HttpProxy) testProxy(target string) (err error) {
+    timeout := 6 * time.Second
+
+    client := &http.Client{
+        Transport: p.GetHttpTransport(),
+        Timeout:   timeout,
+    }
+
+    resp, err := client.Get(target)
+    if err != nil {
+        return
+    }
+    defer func() {
+        err_ := resp.Body.Close()
+        if err != nil {
+            return
+        }
+        err = err_
+        return
+    }()
+
+    if resp.StatusCode != 200 {
+        return fmt.Errorf("http code %d", resp.StatusCode)
+    }
+
+    b, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        return
+    }
+    html := strings.TrimSpace(string(b))
+    if html != p.GetIp() {
+        return proxyNotWork
+    }
+    return
+}
+
+func (p *HttpProxy) TestProxy() (err error) {
+    return p.testProxy(testUrl)
 }
 
 // test http connect method
-func (p *HttpProxy) TestConnectMethod(conn net.Conn) (err error) {
-	defer conn.Close()
-	testHost := "cip.cc:443"
-	Connect := fmt.Sprintf(ConnectCommand, http.MethodConnect, testHost, "HTTP/1.1", testHost)
-	_, err = conn.Write([]byte(Connect))
-	if err != nil {
-		return
-	}
-	// read 200 code
-	var mb [1024]byte
-	if err = conn.SetReadDeadline(time.Now().Add(time.Duration(config.ProxyTimeout) * time.Second)); err != nil {
-		return
-	}
-	_, err = conn.Read(mb[:])
-	if err != nil {
-		return
-	}
-	firstLineIndex := bytes.IndexByte(mb[:], '\n')
-	if firstLineIndex == -1 {
-		return errors.New("error response format")
-	}
-	var stringBack = string(mb[:firstLineIndex])
-	var code, version string
-
-	_, err = fmt.Sscanf(stringBack, "%s %s", &version, &code)
-
-	if err != nil {
-		return
-	}
-
-	if (version != "HTTP/1.1" && version != "HTTP/1.0") || code != "200" {
-		return errors.New("bad response = " + stringBack)
-	}
-
-	return
+func (p *HttpProxy) TestHttpTunnel() (err error) {
+    // target scheme == https 时， net/http 会使用 CONNECT 方式建立隧道
+    // 所以可以通过这种方式来检测 proxy 是否支持 http tunnel
+    return p.testProxy(testHttpsUrl)
 }
