@@ -133,7 +133,7 @@ func (s *Spider) Fetch(proxyURL string, useProxy bool) (body string, err error) 
         if err != nil {
             return
         }
-        p := "http://" + proxy.GetProxyUrl()
+        p := proxy.GetProxyWithSchema()
         logger.WithFields(log.Fields{"proxy": p, "url": proxyURL}).Debug("fetch with proxy")
         resp, body, errs = superAgent.Proxy(p).End()
     } else {
@@ -216,7 +216,7 @@ func getProxy(s Crawler) {
             )
 
             if err != nil {
-                logger.WithError(err).WithField("url", proxySiteURL).Debug("error get new proxy")
+                logger.WithError(err).WithField("url", proxySiteURL).Debug("error fetch proxy site")
             }
 
             //logger.WithFields(log.Fields{
