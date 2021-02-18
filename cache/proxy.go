@@ -3,7 +3,6 @@ package cache
 import (
 	"strconv"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/phpgao/proxy_pool/db"
@@ -13,7 +12,7 @@ import (
 
 type Cached struct {
 	m       sync.RWMutex
-	proxy   map[string][]model.HttpProxy
+	proxies map[string][]model.HttpProxy
 	expire  time.Time
 	expired bool
 }
@@ -21,24 +20,15 @@ type Cached struct {
 var (
 	logger = util.GetLogger("cache")
 	Cache  = Cached{
-		proxy: map[string][]model.HttpProxy{},
+		proxies: map[string][]model.HttpProxy{},
 	}
 	engine       = db.GetDb()
-	once         Once
 	cacheTimeout = time.Duration(util.ServerConf.ProxyCacheTimeOut)
 )
 
 func init() {
-	Cache.proxy = getProxyMap()
+	Cache.proxies = getProxyMap()
 	Cache.expire = time.Now().Add(cacheTimeout * time.Second)
-	go func() {
-		for {
-			if time.Now().Sub(Cache.expire) >= 0 {
-				atomic.StoreUint32(&once.done, 0)
-			}
-			time.Sleep(time.Second)
-		}
-	}()
 }
 
 func getProxyMap() map[string][]model.HttpProxy {
@@ -74,36 +64,15 @@ func getProxyMap() map[string][]model.HttpProxy {
 func (c *Cached) Get() *map[string][]model.HttpProxy {
 	c.m.RLock()
 	defer c.m.RUnlock()
-	now := time.Now()
-	if now.Sub(c.expire) >= 0 {
-		once.Do(c.Update)
+	if time.Now().After(c.expire){
+		c.Update()
 	}
-	return &Cache.proxy
+	return &Cache.proxies
 }
 
 func (c *Cached) Update() {
 	logger.Info("updating cache")
-	c.proxy = getProxyMap()
+	c.proxies = getProxyMap()
 	c.expire = time.Now().Add(cacheTimeout * time.Second)
-	logger.Info("updating cache done")
-}
-
-type Once struct {
-	done uint32
-	m    sync.Mutex
-}
-
-func (o *Once) Do(f func()) {
-	if atomic.LoadUint32(&o.done) == 0 {
-		o.doSlow(f)
-	}
-}
-
-func (o *Once) doSlow(f func()) {
-	o.m.Lock()
-	defer o.m.Unlock()
-	if o.done == 0 {
-		defer atomic.StoreUint32(&o.done, 1)
-		f()
-	}
+	logger.Info("update cache done")
 }
